@@ -2,46 +2,45 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\BusinessException;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class DemoApiController extends Controller
 {
     public function storeProduct(Request $request)
-    {
-        if (!$request->filled('name')) {
-            return response()->json([
-                'error' => 'Product name is required',
-            ], 422);
-        }
+{
+    $validated = $request->validate([
+        'name' => ['required', 'string', 'max:255'],
+    ]);
 
-        return response()->json([
-            'message' => 'Product created',
-            'name' => $request->input('name'),
-        ], 201);
-    }
+    return response()->json([
+        'message' => 'Product created',
+        'name' => $validated['name'],
+    ], 201);
+}
 
     public function showProduct($id)
     {
-        return response()->json([
-            'message' => "Product {$id} was not found",
-            'status' => 'failed',
-        ], 404);
+         throw new NotFoundHttpException('Product not found');
     }
 
     public function storeOrder(Request $request)
-    {
-        return response()->json([
-            'success' => false,
-            'reason' => 'Insufficient inventory',
-        ], 409);
-    }
+{
+    throw new BusinessException(
+        message: 'Insufficient inventory',
+        errorCode: 'INSUFFICIENT_STOCK',
+        httpStatus: 409
+    );
+}
 
     public function profile()
     {
-        return response()->json([
-            'error_message' => 'Authentication required',
-        ], 401);
+        throw new \Illuminate\Auth\AuthenticationException(
+            message: 'User is not authenticated'
+        );
     }
 
     public function systemCheck()
